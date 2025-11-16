@@ -21,6 +21,8 @@ spec:
       labels:
         app: biasguard-backend
         component: api
+    spec:
+      serviceAccountName : biasguard 
     
     spec:
       containers:
