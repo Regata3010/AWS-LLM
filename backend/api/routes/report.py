@@ -16,7 +16,7 @@ from core.src.logger import logging
 router = APIRouter()
 
 # Ensure reports directory exists
-REPORTS_DIR = Path("static/reportspdfs")
+REPORTS_DIR = Path("/app/static/reportspdfs")
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
 
