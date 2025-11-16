@@ -63,8 +63,7 @@ COPY --chown=biasguard:biasguard . .
 
 # Create MLflow tracking directory
 RUN mkdir -p /app/mlruns && chown -R biasguard:biasguard /app/mlruns
-
-
+RUN mkdir -p /app/logsnewer && chown -R biasguard:biasguard /app/logsnewer
 # Set environment variables
 ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
