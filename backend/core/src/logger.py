@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 # Create logs directory if it doesn't exist
-LOG_DIR = Path("logsnewer")
+LOG_DIR = Path("/app/logsnewer")
 LOG_DIR.mkdir(exist_ok=True)
 
 # Configure logging
