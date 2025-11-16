@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: biasguard-backend
+  namespace: biasguard
+  labels:
+    app: biasguard-backend
+spec:
+  type: ClusterIP  # Internal only (accessed via Ingress)
+  
+  selector:
+    app: biasguard-backend
+  
+  ports:
+  - port: 8001
+    targetPort: 8001
+    protocol: TCP
+    name: http
+  
+  sessionAffinity: None

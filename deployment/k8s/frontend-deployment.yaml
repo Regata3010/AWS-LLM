@@ -1,0 +1,61 @@
+# deployment/k8s/30-frontend-deployment.yaml
+# BiasGuard Frontend (React + Nginx) deployment
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: biasguard-frontend
+  namespace: biasguard
+  labels:
+    app: biasguard-frontend
+    component: ui
+spec:
+  replicas: 2  # High availability
+  
+  selector:
+    matchLabels:
+      app: biasguard-frontend
+  
+  template:
+    metadata:
+      labels:
+        app: biasguard-frontend
+        component: ui
+    
+    spec:
+      containers:
+      - name: frontend
+        image: gcr.io/ai-bugger/biasguardnew-frontend:latest
+        
+        ports:
+        - containerPort: 80
+          name: http
+          protocol: TCP
+        
+        # Resource allocation (very lightweight)
+        resources:
+          requests:
+            cpu: 100m      # 0.1 vCPU
+            memory: 128Mi  # 128MB RAM
+          limits:
+            cpu: 250m      # Max 0.25 vCPU
+            memory: 256Mi  # Max 256MB RAM
+        
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 2
+          failureThreshold: 3

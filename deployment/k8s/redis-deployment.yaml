@@ -1,0 +1,102 @@
+# deployment/k8s/11-redis.yaml
+# Redis cache deployment (in-cluster)
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: biasguard-redis
+  namespace: biasguard
+  labels:
+    app: biasguard-redis
+spec:
+  replicas: 1  # Single instance for MVP
+  selector:
+    matchLabels:
+      app: biasguard-redis
+  template:
+    metadata:
+      labels:
+        app: biasguard-redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+          name: redis
+        
+        command:
+        - redis-server
+        - --appendonly
+        - "yes"
+        - --maxmemory
+        - "256mb"
+        - --maxmemory-policy
+        - "allkeys-lru"
+        
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 200m
+            memory: 512Mi
+        
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+        
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 3
+      
+      volumes:
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: redis-pvc
+
+---
+# Persistent Volume Claim for Redis data
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: biasguard
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard  # GKE default storage class
+
+---
+# Redis Service (ClusterIP - internal only)
+apiVersion: v1
+kind: Service
+metadata:
+  name: biasguard-redis
+  namespace: biasguard
+  labels:
+    app: biasguard-redis
+spec:
+  type: ClusterIP
+  selector:
+    app: biasguard-redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+    name: redis

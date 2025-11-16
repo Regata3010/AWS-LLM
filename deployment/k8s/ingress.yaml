@@ -1,0 +1,63 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: biasguard-ingress
+  namespace: biasguard
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"  # Allow large file uploads
+    
+    # WebSocket support
+    nginx.ingress.kubernetes.io/websocket-services: "biasguard-backend"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    
+    # SSL certificate (if using cert-manager)
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    
+spec:
+  # TLS configuration (HTTPS)
+  # Remove this section if using IP address only
+  # tls:
+  # - hosts:
+  #   - biasguard.yourdomain.com
+  #   secretName: biasguard-tls  # cert-manager will create this
+  
+  rules:
+  - http:  # No host = accessible via IP
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: biasguard-frontend
+            port:
+              number: 80
+      
+      # Backend API
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: biasguard-backend
+            port:
+              number: 8001
+      
+      # WebSocket monitoring
+      - path: /ws
+        pathType: Prefix
+        backend:
+          service:
+            name: biasguard-backend
+            port:
+              number: 8001
+      
+      # Health check (direct)
+      - path: /health
+        pathType: Exact
+        backend:
+          service:
+            name: biasguard-backend
+            port:
+              number: 8001

@@ -1,0 +1,99 @@
+# deployment/docker-compose.yml
+# Run from repo root: docker-compose -f deployment/docker-compose.yml up
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:14-alpine
+    container_name: biasguard-postgres
+    environment:
+      POSTGRES_DB: biasguard
+      POSTGRES_USER: biasguard
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme123}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U biasguard"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - biasguard-network
+    restart: unless-stopped
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: biasguard-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - biasguard-network
+    restart: unless-stopped
+
+  # Backend (FastAPI)
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../deployment/backend/Dockerfile
+    container_name: biasguard-backend
+    environment:
+      DATABASE_URL: postgresql://biasguard:${POSTGRES_PASSWORD:-changeme123}@postgres:5432/biasguard
+      REDIS_URL: redis://redis:6379
+      MLFLOW_TRACKING_URI: file:///app/mlruns
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      PINECONE_API_KEY: ${PINECONE_API_KEY}
+      PINECONE_ENVIRONMENT: ${PINECONE_ENVIRONMENT:-us-east1-gcp}
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+    ports:
+      - "8001:8001"
+    volumes:
+      - mlflow_data:/app/mlruns
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - biasguard-network
+    restart: unless-stopped
+    command: sh -c "sleep 10 && uvicorn main:app --host 0.0.0.0 --port 8001 --workers 2"
+
+  # Frontend (React + Nginx)
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: ../deployment/frontend/Dockerfile
+    container_name: biasguard-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - biasguard-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    name: biasguard-postgres-data
+  redis_data:
+    name: biasguard-redis-data
+  mlflow_data:
+    name: biasguard-mlflow-data
+
+networks:
+  biasguard-network:
+    name: biasguard-network
+    driver: bridge

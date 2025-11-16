@@ -1,0 +1,146 @@
+# deployment/k8s/20-backend-deployment.yaml
+# BiasGuard Backend (FastAPI) deployment
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: biasguard-backend
+  namespace: biasguard
+  labels:
+    app: biasguard-backend
+    component: api
+spec:
+  replicas: 2  # High availability
+  
+  selector:
+    matchLabels:
+      app: biasguard-backend
+  
+  template:
+    metadata:
+      labels:
+        app: biasguard-backend
+        component: api
+    
+    spec:
+      containers:
+      # Main application container
+      - name: backend
+        image: gcr.io/ai-bugger/biasguardnew-backend:latest
+        
+        ports:
+        - containerPort: 8001
+          name: http
+          protocol: TCP
+        
+        # Environment from ConfigMap
+        envFrom:
+        - configMapRef:
+            name: biasguard-config
+        
+        # Environment from Secrets
+        env:
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: biasguard-secrets
+              key: POSTGRES_PASSWORD
+        
+        - name: DATABASE_URL
+          value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)"
+        
+        - name: REDIS_URL
+          value: "redis://$(REDIS_HOST):$(REDIS_PORT)"
+        
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: biasguard-secrets
+              key: OPENAI_API_KEY
+        
+        - name: PINECONE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: biasguard-secrets
+              key: PINECONE_API_KEY
+        
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: biasguard-secrets
+              key: SECRET_KEY
+        
+        # Resource allocation
+        resources:
+          requests:
+            cpu: 500m      # 0.5 vCPU guaranteed
+            memory: 1Gi    # 1GB RAM guaranteed
+          limits:
+            cpu: 1000m     # Max 1 vCPU
+            memory: 2Gi    # Max 2GB RAM
+        
+        # Volume mounts
+        volumeMounts:
+        - name: mlflow-data
+          mountPath: /app/mlruns
+        
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+      
+      # Cloud SQL Proxy sidecar
+      - name: cloudsql-proxy
+        image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:latest
+        
+        args:
+        # REPLACE with your actual Cloud SQL instance connection name:
+        - "--port=5432"
+        - "ai-bugger:us-central1:biasguard-postgres"
+        # Format: PROJECT_ID:REGION:INSTANCE_NAME
+        
+        securityContext:
+          runAsNonRoot: true
+        
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+      
+      # Volumes
+      volumes:
+      - name: mlflow-data
+        persistentVolumeClaim:
+          claimName: mlflow-pvc
+
+---
+# Persistent Volume Claim for MLflow artifacts
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mlflow-pvc
+  namespace: biasguard
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi  # 5GB for MLflow experiments
+  storageClassName: standard

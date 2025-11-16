@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: biasguard
+  labels:
+    name: biasguard
+    project: biasguard-platform
+    environment: production
+    managed-by: kubectl
+  annotations:
+    description: "BiasGuard AI Fairness Monitoring Platform"
+    contact: "nuclearreactor@gmail.com"
