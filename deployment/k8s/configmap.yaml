@@ -10,7 +10,7 @@ data:
   # Database Configuration (non-sensitive)
   POSTGRES_DB: "biasguard"
   POSTGRES_USER: "biasguard"
-  POSTGRES_HOST: "127.0.0.1"  # Cloud SQL Proxy localhost
+  POSTGRES_HOST: "biasguard-postgres"  # Cloud SQL Proxy localhost
   POSTGRES_PORT: "5432"
   
   # Redis Configuration

@@ -106,25 +106,25 @@ spec:
           failureThreshold: 3
       
       # Cloud SQL Proxy sidecar
-      - name: cloudsql-proxy
-        image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:latest
+      # - name: cloudsql-proxy
+      #   image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:latest
         
-        args:
-        # REPLACE with your actual Cloud SQL instance connection name:
-        - "--port=5432"
-        - "ai-bugger:us-central1:biasguard-postgres"
-        # Format: PROJECT_ID:REGION:INSTANCE_NAME
+      #   args:
+      #   # REPLACE with your actual Cloud SQL instance connection name:
+      #   - "--port=5432"
+      #   - "ai-bugger:us-central1:biasguard-postgres"
+      #   # Format: PROJECT_ID:REGION:INSTANCE_NAME
         
-        securityContext:
-          runAsNonRoot: true
+      #   securityContext:
+      #     runAsNonRoot: true
         
-        resources:
-          requests:
-            cpu: 100m
-            memory: 128Mi
-          limits:
-            cpu: 200m
-            memory: 256Mi
+      #   resources:
+      #     requests:
+      #       cpu: 100m
+      #       memory: 128Mi
+      #     limits:
+      #       cpu: 200m
+      #       memory: 256Mi
       
       # Volumes
       volumes:
