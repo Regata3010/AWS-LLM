@@ -1,6 +1,4 @@
-# 🛡️ BiasGuard
-
-**Production AI Fairness Monitoring & Compliance Platform**
+# BiasGuard — Production AI Fairness Monitoring Platform
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
@@ -8,169 +6,166 @@
 [![React](https://img.shields.io/badge/React-19+-blue.svg)](https://reactjs.org)
 [![Deployed on GKE](https://img.shields.io/badge/Deployed-GKE-blue.svg)](https://cloud.google.com/kubernetes-engine)
 
-BiasGuard monitors AI models **already deployed in production** to ensure CFPB, EEOC, and EU AI Act compliance. Built for FinTech BNPL companies, lending platforms, and HR tech to avoid regulatory fines and discrimination lawsuits.
+BiasGuard monitors AI models already deployed in production to ensure CFPB, EEOC, and EU AI Act compliance. Built for FinTech BNPL companies, lending platforms, and HR tech to detect bias before regulators do.
 
-**Stop training models. Start monitoring the ones you already have.** 🎯
-
----
-
-## 🎯 **Key Features**
-
-### **📊 Production Model Monitoring**
-- **External Model Registry**: Monitor models deployed on SageMaker, Azure ML, Databricks, anywhere
-- **Prediction Logging**: Capture 1000s+ predictions per second via API
-- **Real-time Bias Detection**: WebSocket-based live monitoring dashboard
-- **Drift Detection**: Track data drift, concept drift, and fairness drift over time
-
-### **🔍 Enterprise Bias Detection**
-- **7 Fairness Metrics**: Statistical Parity, Disparate Impact, Equal Opportunity, Average Odds, Theil Index, Generalized Entropy, Coefficient of Variation
-- **AIF360 Integration**: Industry-standard fairness library from IBM
-- **Intersectionality Analysis**: Detect compound bias across multiple protected attributes (race + gender, age + disability)
-- **Historical Tracking**: Monitor bias trends over weeks/months
-
-### **🤖 AI Compliance Agent**
-- **LangGraph-based Agent**: Multi-tool autonomous reasoning with RAG + CAG
-- **RAG (Retrieval-Augmented Generation)**: CFPB/EEOC regulation knowledge base in Pinecone
-- **CAG (Context-Augmented Generation)**: Real-time access to your model data
-- **Natural Language Queries**: 
-  - "Is my loan approval model compliant with ECOA?"
-  - "What's the four-fifths rule and do I pass it?"
-  - "Which models have violations this month?"
-  - "Explain Regulation B Section 1002.6(a)"
-
-### **📄 Automated Compliance Reporting**
-- **CFPB Adverse Action Notices**: Auto-generated documentation
-- **EEOC Compliance Reports**: Statistical evidence for audits
-- **Executive Summaries**: LLM-generated insights for leadership
-- **Audit Trail**: Complete history of predictions, analyses, and violations
-
-### **⚡ Real-Time Alerting**
-- **Violation Alerts**: Instant notifications when bias thresholds exceeded
-- **Slack/Email Integration**: Alert your compliance team immediately
-- **Customizable Thresholds**: Set your own risk tolerance per model
-
-### **🎓 Model Training Platform (Legacy V1.0)**
-*Note: BiasGuard V1.0 includes a training platform where users can upload CSVs, train models with LLM-assisted column selection, and apply bias mitigation. This is available but not the primary focus—BiasGuard is now optimized for monitoring production models.*
+**Stop training models. Start monitoring the ones you already have.**
 
 ---
 
-## 💼 **Why BiasGuard?**
+## Problem
 
-### **The Problem:**
-Companies have ML models **already deployed** (trained by their data science teams). But they have **no idea** if these models are discriminating against protected classes—until they get sued or fined.
+Companies have ML models already deployed — trained by their data science teams, running in production, making decisions that affect real people. But they have no visibility into whether those models are discriminating against protected classes until they get sued or fined.
 
-### **The Consequences:**
-- **CFPB Fines**: $1M - $100M+ for biased lending models
-- **Lawsuits**: Class-action discrimination suits cost millions
-- **Reputation Damage**: Public scandals destroy brand trust
-- **Lost Revenue**: Models get pulled from production
+- CFPB fines: $1M - $100M+ for biased lending models
+- Class-action discrimination suits cost millions in legal fees
+- Models pulled from production cause direct revenue loss
 
-### **The Solution:**
-**BiasGuard monitors your production models 24/7** and alerts you to violations **before** regulators find them.
+BiasGuard monitors production models 24/7 and surfaces violations before regulators do.
 
 ---
 
-## 🏗️ **Architecture**
+## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   BiasGuard Platform (V2.0)                  │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  Frontend (React + TypeScript)                              │
-│  ├─ Real-time Monitoring Dashboard (WebSockets)             │
-│  ├─ AI Compliance Chat Interface                            │
-│  ├─ External Model Registry                                  │
-│  ├─ Prediction Logging UI                                    │
-│  └─ Compliance Report Generator                              │
-│                                                              │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  Backend (FastAPI + Python)                                 │
-│  ├─ Bias Detection Engine (AIF360)                          │
-│  │   └─ 7 fairness metrics, intersectionality analysis      │
-│  ├─ AI Compliance Agent (LangGraph + GPT-4)                 │
-│  │   ├─ RAG: CFPB/EEOC regulations (Pinecone)               │
-│  │   └─ CAG: Real-time model data access                    │
-│  ├─ Prediction Logging API (1000s+ predictions/sec)         │
-│  ├─ Real-time Monitoring (WebSockets, drift detection)      │
-│  ├─ Report Generation (CFPB, EEOC, executive summaries)     │
-│  └─ Alert Engine (Slack, email, webhooks)                   │
-│                                                              │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  Data Layer                                                  │
-│  ├─ PostgreSQL (Model registry, predictions, audit logs)    │
-│  ├─ Redis (Cache, real-time updates)                        │
-│  ├─ Pinecone (CFPB/EEOC regulation vector store)            │
-│  └─ S3/GCS (Reports, datasets)                              │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A([External Model\nSageMaker / Azure ML / Databricks]) -->|POST predictions + sensitive attributes| B
 
-Your Production Environment:
-├─ SageMaker / Azure ML / Databricks models
-│   └─ POST predictions to BiasGuard API
-└─ BiasGuard monitors → Detects bias → Alerts you
+    B[Prediction Logging API\n1000+ predictions per second]
+    B --> C
+
+    C[Bias Detection Engine\ncore/bias_engine.py · AIF360]
+    C --> D[7 Fairness Metrics\nStatistical Parity · Disparate Impact\nEqual Opportunity · Average Odds\nTheil Index · Generalized Entropy · CV]
+    D --> E
+
+    E[Intersectionality Analysis\ncore/intersectionality.py\nrace + gender · age + disability]
+    E --> F{Violation\nDetected?}
+
+    F -->|Yes| G[Alert Engine\nSlack · Email · Webhook]
+    F -->|No| H[Dashboard Update\nReal-time via WebSocket]
+
+    G --> I
+    H --> I
+
+    I[AI Compliance Agent\nagent/compliance_agent.py\nLangGraph + GPT-4]
+    I --> J[RAG\nCFPB/EEOC regulations\nPinecone vector store]
+    I --> K[CAG\nReal-time model data\nlive prediction context]
+
+    J & K --> L
+
+    L[Compliance Report Generation\nagent/report_generator.py]
+    L --> M([CFPB Adverse Action Notices\nEEOC Audit Documentation\nExecutive Summaries\nComplete Audit Trail])
+
+    style A fill:#6366f1,color:#fff
+    style M fill:#374151,color:#fff
+    style F fill:#d97706,color:#fff
+    style G fill:#dc2626,color:#fff
+    style H fill:#059669,color:#fff
+    style I fill:#7c3aed,color:#fff
 ```
 
 ---
 
-## 🚀 **Quick Start**
+## How It Works
 
-### **Prerequisites**
-- Python 3.10+
-- Node.js 20+
-- PostgreSQL 14+
-- Redis 7+
-- Docker (optional)
+**1. Register your model** — point BiasGuard at any model running on SageMaker, Azure ML, Databricks, or your own infrastructure.
 
-### **1. Clone Repository**
+**2. Log predictions** — send predictions and sensitive attributes to the BiasGuard API as your model runs. Handles 1000+ predictions per second.
+
+**3. Bias detection runs automatically** — AIF360 computes 7 fairness metrics including intersectionality analysis across protected attribute combinations.
+
+**4. Violations trigger alerts** — Slack, email, or webhook notifications when thresholds are breached.
+
+**5. AI compliance agent answers questions** — LangGraph-based agent with RAG over CFPB/EEOC regulation knowledge base answers natural language compliance queries against your live model data.
+
+**6. Reports generated on demand** — CFPB adverse action notices, EEOC statistical evidence, executive summaries.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Bias Detection | AIF360 (IBM), 7 fairness metrics |
+| AI Compliance Agent | LangGraph, GPT-4, Pinecone (RAG) |
+| Backend | FastAPI, SQLAlchemy, PostgreSQL, Redis |
+| Frontend | React 19, TypeScript, Tailwind CSS, Recharts |
+| Real-time | WebSockets |
+| Infrastructure | Docker, Kubernetes (GKE), Nginx |
+| Model Registry | External — SageMaker, Azure ML, Databricks |
+
+---
+
+## Fairness Metrics
+
+| Metric | Description | Compliant Range | Regulation |
+|---|---|---|---|
+| Disparate Impact | Ratio of favorable outcomes | [0.8, 1.25] | EEOC Four-Fifths Rule |
+| Statistical Parity | Difference in approval rates | [-0.1, 0.1] | CFPB Guidance |
+| Equal Opportunity | True positive rate parity | [-0.1, 0.1] | EEOC Title VII |
+| Average Odds | TPR and FPR parity | [-0.1, 0.1] | EU AI Act |
+| Theil Index | Income inequality analogue for predictions | < 0.1 | Internal threshold |
+| Generalized Entropy | Distribution-level fairness | < 0.1 | Internal threshold |
+| Coefficient of Variation | Spread of outcomes across groups | < 0.1 | Internal threshold |
+
+---
+
+## Key Features
+
+**External Model Registry** — monitor models deployed anywhere, no retraining or redeployment required.
+
+**Intersectionality Analysis** — detects compound bias across multiple protected attributes simultaneously (race + gender, age + disability).
+
+**AI Compliance Agent** — LangGraph-based agent combines RAG over CFPB/EEOC regulations with real-time access to your model data. Example queries:
+- "Is my loan approval model compliant with ECOA?"
+- "What is the four-fifths rule and do I pass it?"
+- "Which models have violations this month?"
+- "Explain Regulation B Section 1002.6(a)"
+
+**Automated Compliance Reporting** — CFPB adverse action notices, EEOC audit documentation, LLM-generated executive summaries, complete audit trail.
+
+**Note on V1.0** — BiasGuard V1.0 included a training platform where users could upload CSVs, train models with LLM-assisted column detection, and apply bias mitigation. That architecture was deprecated in V2.0 in favor of monitoring-first design.
+
+---
+
+## Quick Start
+
+**Prerequisites:** Python 3.10+, Node.js 20+, PostgreSQL 14+, Redis 7+, Docker
+
 ```bash
 git clone https://github.com/Regata3010/biasguard.git
 cd biasguard
-```
 
-### **2. Docker Deployment (Recommended)**
-```bash
-# Copy environment template
 cp deployment/.env.example deployment/.env
 # Edit deployment/.env with your API keys
 
-# Start all services
 docker-compose -f deployment/docker-compose.yml up -d
-
-# Access BiasGuard
-open http://localhost
 ```
 
-### **3. Manual Setup**
+Access at `http://localhost`. API docs at `http://localhost:8001/docs`.
 
-**Backend:**
+**Manual setup:**
+
 ```bash
+# Backend
 cd backend
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env  # Edit with your API keys
+cp .env.example .env
 uvicorn main:app --reload --port 8001
-```
 
-**Frontend:**
-```bash
+# Frontend
 cd frontend
 npm install
 npm run dev
 ```
 
-**Access:**
-- Dashboard: http://localhost:5173
-- API Docs: http://localhost:8001/docs
-
 ---
 
-## 🔑 **Environment Variables**
+## Environment Variables
 
-### **Backend**
+**Backend:**
+
 ```bash
 DATABASE_URL=postgresql://user:password@localhost:5432/biasguard
 REDIS_URL=redis://localhost:6379
@@ -180,20 +175,18 @@ PINECONE_ENVIRONMENT=us-east1-gcp
 SECRET_KEY=your-secret-key-32-chars-min
 ```
 
-### **Frontend**
+**Frontend:**
+
 ```bash
 VITE_API_URL=http://localhost:8001/api/v1
 ```
 
 ---
 
-## 📖 **API Documentation**
+## API Examples
 
-Full interactive API documentation: http://localhost:8001/docs
+**Register a model:**
 
-### **Quick Examples:**
-
-**Register Model:**
 ```bash
 POST /api/v1/models/register
 {
@@ -203,7 +196,8 @@ POST /api/v1/models/register
 }
 ```
 
-**Log Predictions:**
+**Log predictions:**
+
 ```bash
 POST /api/v1/monitor/batch
 {
@@ -216,7 +210,8 @@ POST /api/v1/monitor/batch
 }
 ```
 
-**Analyze Bias:**
+**Run bias analysis:**
+
 ```bash
 POST /api/v1/analyze
 {
@@ -225,115 +220,93 @@ POST /api/v1/analyze
 }
 ```
 
-**Chat with AI Agent:**
+**Query the compliance agent:**
+
 ```bash
 POST /api/v1/agent/chat
 {
-  "message": "Is my loan model compliant?"
+  "message": "Is my loan model compliant with ECOA?"
 }
 ```
 
 ---
 
-## 📊 **Fairness Metrics**
+## Project Structure
 
-| Metric | Description | Compliant Range | Regulation |
-|--------|-------------|-----------------|------------|
-| **Disparate Impact** | Ratio of favorable outcomes | [0.8, 1.25] | EEOC Four-Fifths Rule |
-| **Statistical Parity** | Difference in approval rates | [-0.1, 0.1] | CFPB Guidance |
-| **Equal Opportunity** | True positive rate parity | [-0.1, 0.1] | EEOC Title VII |
-| **Average Odds** | TPR and FPR parity | [-0.1, 0.1] | EU AI Act |
+```
+biasguard/
+├── backend/
+│   ├── main.py                      # FastAPI entry point
+│   ├── api/
+│   │   ├── models.py                # Model registry endpoints
+│   │   ├── monitor.py               # Prediction logging endpoints
+│   │   ├── analyze.py               # Bias analysis endpoints
+│   │   └── agent.py                 # AI compliance agent endpoints
+│   ├── core/
+│   │   ├── bias_engine.py           # AIF360 fairness computation
+│   │   ├── intersectionality.py     # Cross-attribute bias detection
+│   │   ├── drift_detection.py       # Data and fairness drift
+│   │   └── alert_engine.py          # Violation alerting
+│   ├── agent/
+│   │   ├── compliance_agent.py      # LangGraph agent definition
+│   │   ├── rag_retriever.py         # CFPB/EEOC regulation RAG
+│   │   └── report_generator.py      # Automated compliance reports
+│   └── models/
+│       └── schemas.py               # SQLAlchemy models
+├── frontend/
+│   └── src/
+│       ├── components/
+│       │   ├── Dashboard.tsx        # Real-time monitoring
+│       │   ├── AgentChat.tsx        # AI compliance chat
+│       │   └── ReportGenerator.tsx  # Report UI
+│       └── hooks/
+│           └── useWebSocket.ts      # Real-time updates
+└── deployment/
+    ├── docker-compose.yml
+    ├── .env.example
+    └── k8s/                         # GKE manifests
+```
 
 ---
 
-## 🎯 **Use Cases**
+## Deployment
 
-### **FinTech / BNPL Lending**
-Monitor loan approval models for ECOA compliance and detect racial/gender bias in credit decisions.
+**Local:**
 
-### **HR Tech / Recruiting**
-Monitor resume screening models for EEOC compliance and ensure diverse candidate pools.
-
-### **Healthcare**
-Monitor patient risk models for equitable care and track health equity metrics.
-
----
-
-## 🛠️ **Technology Stack**
-
-**Backend:** FastAPI, SQLAlchemy, AIF360, LangChain, LangGraph, OpenAI GPT-4, Pinecone, PostgreSQL, Redis
-
-**Frontend:** React 19, TypeScript, Tailwind CSS, Recharts, WebSockets
-
-**Infrastructure:** Docker, Kubernetes (GKE), Nginx, Cloud SQL, Google Container Registry
-
----
-
-## 🚀 **Deployment**
-
-### **Local (Docker)**
 ```bash
 docker-compose -f deployment/docker-compose.yml up -d
 ```
 
-### **Production (GKE)**
+**Production (GKE):**
+
 ```bash
 kubectl apply -f deployment/k8s/
 ```
 
 ---
 
-## 📝 **License**
+## Use Cases
 
-This project is licensed under the MIT License.
+**FinTech / BNPL Lending** — monitor loan approval models for ECOA compliance, detect racial and gender bias in credit decisions.
 
----
+**HR Tech / Recruiting** — monitor resume screening models for EEOC compliance, ensure diverse candidate selection.
 
-## 🗺️ **Roadmap**
-
-### **V2.0 (Current)**
-- ✅ External model registry
-- ✅ 7 fairness metrics with AI agent
-- ✅ Real-time monitoring
-- ✅ CFPB compliance reports
-
-### **V2.1 (Q1 2026)**
-- 🔲 Slack/Teams integration
-- 🔲 Custom alert thresholds
-- 🔲 Multi-region deployment
-- 🔲 SSO (SAML/OAuth)
-
-### **V3.0 (Q3 2026)**
-- 🔲 Multi-tenancy for enterprises
-- 🔲 SOC2 Type II certification
-- 🔲 Global model marketplace
+**Healthcare** — monitor patient risk models for equitable care outcomes across demographic groups.
 
 ---
 
-## 📧 **Contact**
+## Contact
 
-**Aarav Pandey**
-- Email: nuclearreactor3010@gmail.com
+**Arav Pandey**
 - GitHub: [@Regata3010](https://github.com/Regata3010)
 - LinkedIn: [linkedin.com/in/aravpandey](https://www.linkedin.com/in/aravpandey/)
+- Email: nuclearreactor3010@gmail.com
 
 ---
 
-## 🙏 **Acknowledgments**
+## Acknowledgments
 
-- [AIF360](https://github.com/Trusted-AI/AIF360) - IBM's fairness toolkit
-- [LangChain](https://www.langchain.com/) - LLM application framework
-- [FastAPI](https://fastapi.tiangolo.com/) - Modern Python web framework
-- [Pinecone](https://www.pinecone.io/) - Vector database for RAG
-
----
-
-<div align="center">
-
-**Built with ❤️ for a fairer AI future**
-
-**Monitor your models. Avoid lawsuits. Stay compliant.** 🛡️
-
-[Report Bug](https://github.com/Regata3010/biasguard/issues) · [Request Feature](https://github.com/Regata3010/biasguard/issues)
-
-</div>
+- [AIF360](https://github.com/Trusted-AI/AIF360) — IBM fairness toolkit
+- [LangChain](https://www.langchain.com/) — LLM application framework
+- [FastAPI](https://fastapi.tiangolo.com/) — Python web framework
+- [Pinecone](https://www.pinecone.io/) — Vector database for RAG
