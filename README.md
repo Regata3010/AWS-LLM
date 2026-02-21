@@ -28,32 +28,32 @@ BiasGuard monitors production models 24/7 and surfaces violations before regulat
 
 ```mermaid
 flowchart TD
-    A([External Model\nSageMaker / Azure ML / Databricks]) -->|POST predictions + sensitive attributes| B
+    A([External Model<br/>SageMaker / Azure ML / Databricks]) -->|POST predictions + sensitive attributes| B
 
-    B[Prediction Logging API\n1000+ predictions per second]
+    B[Prediction Logging API<br/>1000+ predictions per second]
     B --> C
 
-    C[Bias Detection Engine\ncore/bias_engine.py · AIF360]
-    C --> D[7 Fairness Metrics\nStatistical Parity · Disparate Impact\nEqual Opportunity · Average Odds\nTheil Index · Generalized Entropy · CV]
+    C[Bias Detection Engine<br/>core/bias_engine.py · AIF360]
+    C --> D[7 Fairness Metrics<br/>Statistical Parity · Disparate Impact<br/>Equal Opportunity · Average Odds<br/>Theil Index · Generalized Entropy · CV]
     D --> E
 
-    E[Intersectionality Analysis\ncore/intersectionality.py\nrace + gender · age + disability]
-    E --> F{Violation\nDetected?}
+    E[Intersectionality Analysis<br/>core/intersectionality.py<br/>race + gender · age + disability]
+    E --> F{Violation<br/>Detected?}
 
-    F -->|Yes| G[Alert Engine\nSlack · Email · Webhook]
-    F -->|No| H[Dashboard Update\nReal-time via WebSocket]
+    F -->|Yes| G[Alert Engine<br/>Slack · Email · Webhook]
+    F -->|No| H[Dashboard Update<br/>Real-time via WebSocket]
 
     G --> I
     H --> I
 
-    I[AI Compliance Agent\nagent/compliance_agent.py\nLangGraph + GPT-4]
-    I --> J[RAG\nCFPB/EEOC regulations\nPinecone vector store]
-    I --> K[CAG\nReal-time model data\nlive prediction context]
+    I[AI Compliance Agent<br/>agent/compliance_agent.py<br/>LangGraph + GPT-4]
+    I --> J[RAG<br/>CFPB/EEOC regulations<br/>Pinecone vector store]
+    I --> K[CAG<br/>Real-time model data<br/>live prediction context]
 
     J & K --> L
 
-    L[Compliance Report Generation\nagent/report_generator.py]
-    L --> M([CFPB Adverse Action Notices\nEEOC Audit Documentation\nExecutive Summaries\nComplete Audit Trail])
+    L[Compliance Report Generation<br/>agent/report_generator.py]
+    L --> M([CFPB Adverse Action Notices<br/>EEOC Audit Documentation<br/>Executive Summaries<br/>Complete Audit Trail])
 
     style A fill:#6366f1,color:#fff
     style M fill:#374151,color:#fff
