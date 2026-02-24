@@ -12,6 +12,24 @@ BiasGuard monitors AI models already deployed in production to ensure CFPB, EEOC
 
 ---
 
+## Screenshots
+
+**Disparate Impact Analysis**
+![Disparate Impact](./screenshots/DI.png)
+
+**Statistical Parity**
+![Statistical Parity](./screenshots/StatisticalParity.png)
+
+**Intersectionality Analysis**
+![Intersectionality Analysis](./screenshots/IA.png)
+
+**Model Registration**
+![Model Registration](./screenshots/register1.png)
+
+**[View Sample Compliance Report (PDF)](./report_model_2d5eff13694f_20260224_145101.pdf)**
+
+---
+
 ## Problem
 
 Companies have ML models already deployed — trained by their data science teams, running in production, making decisions that affect real people. But they have no visibility into whether those models are discriminating against protected classes until they get sued or fined.
@@ -113,7 +131,13 @@ flowchart TD
 
 **External Model Registry** — monitor models deployed anywhere, no retraining or redeployment required.
 
-**Intersectionality Analysis** — detects compound bias across multiple protected attributes simultaneously (race + gender, age + disability).
+**Intersectionality Analysis** — detects compound bias across multiple protected attributes simultaneously (race + gender, age + race). Surfaces worst intersectional groups with DI scores and risk levels — critical groups are flagged independently of individual attribute scores.
+
+**Bias Drift Monitoring** — tracks fairness metrics across analysis runs over time, visualized as a time-series chart in both the UI and generated PDF reports.
+
+**Real-time Alerts** — Slack and webhook notifications fire automatically when thresholds are breached. Intersectional violations trigger critical alerts independently of individual attribute scores.
+
+**Role-Based Access Control** — admin, analyst, and viewer roles scoped per organization. Users only see their organization's models and data.
 
 **AI Compliance Agent** — LangGraph-based agent combines RAG over CFPB/EEOC regulations with real-time access to your model data. Example queries:
 - "Is my loan approval model compliant with ECOA?"
@@ -121,7 +145,7 @@ flowchart TD
 - "Which models have violations this month?"
 - "Explain Regulation B Section 1002.6(a)"
 
-**Automated Compliance Reporting** — CFPB adverse action notices, EEOC audit documentation, LLM-generated executive summaries, complete audit trail.
+**Automated Compliance Reporting** — CFPB adverse action notices, EEOC audit documentation, LLM-generated executive summaries, intersectionality breakdown, bias drift chart, and complete audit trail — all in a single PDF.
 
 **Note on V1.0** — BiasGuard V1.0 included a training platform where users could upload CSVs, train models with LLM-assisted column detection, and apply bias mitigation. That architecture was deprecated in V2.0 in favor of monitoring-first design.
 
@@ -129,57 +153,59 @@ flowchart TD
 
 ## Quick Start
 
-**Prerequisites:** Python 3.10+, Node.js 20+, PostgreSQL 14+, Redis 7+, Docker
+**Prerequisites:** Python 3.10+, Node.js 20+, Conda
 
 ```bash
 git clone https://github.com/Regata3010/biasguard.git
 cd biasguard
-
-cp deployment/.env.example deployment/.env
-# Edit deployment/.env with your API keys
-
-docker-compose -f deployment/docker-compose.yml up -d
 ```
-
-Access at `http://localhost`. API docs at `http://localhost:8001/docs`.
-
-**Manual setup:**
-
-```bash
-# Backend
-cd backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-uvicorn main:app --reload --port 8001
-
-# Frontend
-cd frontend
-npm install
-npm run dev
-```
-
----
-
-## Environment Variables
 
 **Backend:**
 
 ```bash
-DATABASE_URL=postgresql://user:password@localhost:5432/biasguard
-REDIS_URL=redis://localhost:6379
-OPENAI_API_KEY=sk-...
-PINECONE_API_KEY=...
-PINECONE_ENVIRONMENT=us-east1-gcp
-SECRET_KEY=your-secret-key-32-chars-min
+cd backend
+conda activate /path/to/your/env
+pip install -r requirements.txt
+# Create backend/.env — see Environment Variables section below
+uvicorn main:app --host 0.0.0.0 --port 8001
 ```
 
 **Frontend:**
 
 ```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Access at `http://localhost:5173`. API docs at `http://localhost:8001/docs`.
+
+---
+
+## Environment Variables
+
+**Backend** (`backend/.env`):
+
+```bash
+OPENAI_API_KEY=sk-...
+PINECONE_API_KEY=...
+PINECONE_ENVIRONMENT=us-east-1
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
+
+# Alert delivery (Slack/webhook)
+ALERT_WEBHOOK_URL=https://hooks.slack.com/services/...
+ALERT_SMTP_HOST=smtp.gmail.com
+ALERT_SMTP_PORT=587
+```
+
+**Frontend** (`frontend/.env`):
+
+```bash
 VITE_API_URL=http://localhost:8001/api/v1
 ```
+
+> Local dev uses SQLite (`biasguard2.0.db`) by default. Set `DATABASE_URL` for PostgreSQL in production.
 
 ---
 
@@ -216,7 +242,8 @@ POST /api/v1/monitor/batch
 POST /api/v1/analyze
 {
   "model_id": "model_abc123",
-  "period_days": 30
+  "period_days": 365,
+  "min_samples": 10
 }
 ```
 
@@ -236,38 +263,44 @@ POST /api/v1/agent/chat
 ```
 biasguard/
 ├── backend/
-│   ├── main.py                      # FastAPI entry point
+│   ├── main.py                           # FastAPI entry point
 │   ├── api/
-│   │   ├── models.py                # Model registry endpoints
-│   │   ├── monitor.py               # Prediction logging endpoints
-│   │   ├── analyze.py               # Bias analysis endpoints
-│   │   └── agent.py                 # AI compliance agent endpoints
+│   │   └── routes/
+│   │       ├── models.py                 # Model registry endpoints
+│   │       ├── monitor.py                # Prediction logging endpoints
+│   │       ├── analyze.py                # Bias analysis (v2, external models)
+│   │       ├── bias.py                   # Bias detection (v1, trained models)
+│   │       ├── report.py                 # Compliance report generation
+│   │       └── ai_agent.py               # AI compliance agent endpoints
 │   ├── core/
-│   │   ├── bias_engine.py           # AIF360 fairness computation
-│   │   ├── intersectionality.py     # Cross-attribute bias detection
-│   │   ├── drift_detection.py       # Data and fairness drift
-│   │   └── alert_engine.py          # Violation alerting
-│   ├── agent/
-│   │   ├── compliance_agent.py      # LangGraph agent definition
-│   │   ├── rag_retriever.py         # CFPB/EEOC regulation RAG
-│   │   └── report_generator.py      # Automated compliance reports
-│   └── models/
-│       └── schemas.py               # SQLAlchemy models
+│   │   ├── bias_detector/
+│   │   │   ├── bias_engine.py            # AIF360 fairness computation
+│   │   │   └── intersectionality.py      # Cross-attribute bias detection
+│   │   ├── ai/
+│   │   │   ├── agent.py                  # LangGraph compliance agent
+│   │   │   └── rag.py                    # CFPB/EEOC regulation RAG (Pinecone)
+│   │   └── reports/
+│   │       └── report_generator.py       # PDF report generation
+│   └── services/
+│       └── alert_service.py              # Slack/webhook alert delivery
 ├── frontend/
 │   └── src/
-│       ├── components/
-│       │   ├── Dashboard.tsx        # Real-time monitoring
-│       │   ├── AgentChat.tsx        # AI compliance chat
-│       │   └── ReportGenerator.tsx  # Report UI
-│       └── hooks/
-│           └── useWebSocket.ts      # Real-time updates
+│       ├── pages/
+│       │   ├── ModelDetail.tsx           # Model detail, metrics, drift chart
+│       │   ├── Monitor.tsx               # Model registration wizard
+│       │   └── Dashboard.tsx             # Overview dashboard
+│       └── components/
+│           ├── charts/
+│           │   └── BiasChart.tsx         # Bias drift time-series chart
+│           └── chat/
+│               └── ChatPanel.tsx         # AI compliance agent chat
+├── screenshots/                          # UI screenshots
 └── deployment/
-    ├── docker-compose.yml
-    ├── .env.example
-    └── k8s/                         # GKE manifests
+    └── docker-compose.yml
 ```
 
 ---
+
 
 ## Deployment
 
@@ -284,6 +317,7 @@ kubectl apply -f deployment/k8s/
 ```
 
 ---
+-->
 
 ## Use Cases
 
